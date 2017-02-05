@@ -1,6 +1,6 @@
 ## Interface: 70100
 ## Title: StayDead
-## Version: 1.0
+## Version: 1.1
 ## Author: Lyzu
 ## Notes: What is dead, should stay dead.
 

@@ -31,7 +31,7 @@ function StayDead_fetch()
         for i=1,GetNumGroupMembers(),1 do
             name, rank = GetRaidRosterInfo(i);
             if (rank == 2) then
-                SendAddonMessage(addon_prefix, "fetch:init", "WHISPER", name);
+                SendAddonMessage(addon_prefix, "fetch:" .. UnitName("player"), "WHISPER", name);
             end
         end
 
@@ -39,7 +39,7 @@ function StayDead_fetch()
     elseif (IsInGroup(LE_PARTY_CATEGORY_HOME)) then
         for i=1,GetNumGroupMembers(),1 do
             if (UnitIsGroupLeader("party" .. i)) then
-                SendAddonMessage(addon_prefix, "fetch:init", "WHISPER", UnitName("party" .. i));
+                SendAddonMessage(addon_prefix, "fetch:" .. UnitName("player"), "WHISPER", UnitName("party" .. i));
             end
         end    
     end
@@ -71,7 +71,7 @@ events:SetScript("OnEvent", function(self, event, arg1)
 end)
 
 -- sync handling
-sync:SetScript("OnEvent", function(self, event, prefix, message, channel, _, sender)
+sync:SetScript("OnEvent", function(self, event, prefix, message, channel, fullsender, sender)
     if (event == "CHAT_MSG_ADDON") and (prefix == addon_prefix) then
         local action, message = string.match(message, "(%a*):(.*)")
     
@@ -92,7 +92,21 @@ sync:SetScript("OnEvent", function(self, event, prefix, message, channel, _, sen
         -- fetching
         elseif (action == "fetch") then
             if (UnitInParty(sender)) then
-                SendAddonMessage(addon_prefix, "sync:" .. addon_prefix .. "_" .. status, "WHISPER", sender);
+                -- if sender is not set
+                if (sender == nil) then
+                    local sender = string.match(sender, "(%a*)-.*")                
+                end
+                
+                if (sender ~= nil) then
+                    print(string.format("Could not update. Message: %s", message));
+                else
+                    SendAddonMessage(addon_prefix, "sync:" .. addon_prefix .. "_" .. status, "WHISPER", sender);
+                end
+            end
+
+        elseif (action == "res") then
+            if (UnitIsGroupLeader(sender)) then
+                RepopMe();
             end
         end
     end
@@ -104,6 +118,9 @@ local function handler(msg, editbox)
     if (UnitIsGroupLeader("player")) then
         if (msg == "on") or (msg == "off") then
             SendAddonMessage(addon_prefix, "sync:" .. addon_prefix .. "_" .. msg, "RAID");
+
+        elseif (msg == "res") then
+            SendAddonMessage(addon_prefix, "res:all", "RAID");
         end
 
     -- restricted
