@@ -54,7 +54,7 @@ events:SetScript("OnEvent", function(self, event, arg1)
     elseif (event == "GROUP_JOINED") then
         StayDead_fetch()
     elseif (event == "GROUP_LEFT") and (status == "on") then
-        print("|cFF8753ef" .. addon_prefix ..|"r disabled");
+        print("|cFF8753ef" .. addon_prefix .. "|r disabled");
         status = "off"
     elseif (event == "PLAYER_LOGIN") then
         StayDead_fetch()
@@ -72,10 +72,10 @@ sync:SetScript("OnEvent", function(self, event, prefix, message, channel, fullse
             if (UnitIsGroupLeader(sender)) then
                 -- updating status
                 if (message == "StayDead_on") and (status == "off") then
-                    print("|cFF8753ef" .. addon_prefix ..|"r enabled");
+                    print("|cFF8753ef" .. addon_prefix .. "|r enabled");
                     status = "on";
                 elseif (message == "StayDead_off") and (status == "on") then
-                    print("|cFF8753ef" .. addon_prefix ..|"r disabled");
+                    print("|cFF8753ef" .. addon_prefix .. "|r disabled");
                     status = "off";
                 end
             end
@@ -97,9 +97,9 @@ end)
 local function handler(msg, editbox)
     if (msg == "status") then
         if (status == "on") then
-            print("|cFF8753ef" .. addon_prefix ..|"r is enabled");
+            print("|cFF8753ef" .. addon_prefix .. "|r is enabled");
         elseif (status == "off") then
-            print("|cFF8753ef" .. addon_prefix ..|"r is disabled");
+            print("|cFF8753ef" .. addon_prefix .. "|r is disabled");
         end
     else
         -- sync to others
