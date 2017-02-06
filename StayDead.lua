@@ -54,7 +54,7 @@ events:SetScript("OnEvent", function(self, event, arg1)
     elseif (event == "GROUP_JOINED") then
         StayDead_fetch()
     elseif (event == "GROUP_LEFT") and (status == "on") then
-        print("|cFF8753efStayDead|r disabled");
+        print("|cFF8753ef" .. addon_prefix ..|"r disabled");
         status = "off"
     elseif (event == "PLAYER_LOGIN") then
         StayDead_fetch()
@@ -72,10 +72,10 @@ sync:SetScript("OnEvent", function(self, event, prefix, message, channel, fullse
             if (UnitIsGroupLeader(sender)) then
                 -- updating status
                 if (message == "StayDead_on") and (status == "off") then
-                    print("|cFF8753efStayDead|r enabled");
+                    print("|cFF8753ef" .. addon_prefix ..|"r enabled");
                     status = "on";
                 elseif (message == "StayDead_off") and (status == "on") then
-                    print("|cFF8753efStayDead|r disabled");
+                    print("|cFF8753ef" .. addon_prefix ..|"r disabled");
                     status = "off";
                 end
             end
@@ -84,7 +84,8 @@ sync:SetScript("OnEvent", function(self, event, prefix, message, channel, fullse
             if (sender ~= nil) and (UnitInParty(sender))then
                 SendAddonMessage(addon_prefix, "sync:" .. addon_prefix .. "_" .. status, "WHISPER", sender);
             end
-        elseif (action == "res") then
+        -- todo: remove res
+        elseif (action == "release") or (action == "res") then
             if (UnitIsGroupLeader(sender)) then
                 RepopMe();
             end
@@ -96,17 +97,17 @@ end)
 local function handler(msg, editbox)
     if (msg == "status") then
         if (status == "on") then
-            print("|cFF8753efStayDead|r is enabled");
+            print("|cFF8753ef" .. addon_prefix ..|"r is enabled");
         elseif (status == "off") then
-            print("|cFF8753efStayDead|r is disabled");
+            print("|cFF8753ef" .. addon_prefix ..|"r is disabled");
         end
     else
         -- sync to others
         if (UnitIsGroupLeader("player")) then
             if (msg == "on") or (msg == "off") then
                 SendAddonMessage(addon_prefix, "sync:" .. addon_prefix .. "_" .. msg, "RAID");
-            elseif (msg == "res") then
-                SendAddonMessage(addon_prefix, "res:all", "RAID");
+            elseif (msg == "release") then
+                SendAddonMessage(addon_prefix, "release:all", "RAID");
             end
         -- restricted
         else
