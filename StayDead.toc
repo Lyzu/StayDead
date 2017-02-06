@@ -1,7 +1,7 @@
 ## Interface: 70100
 ## Title: StayDead
-## Version: 1.1.1
-## Author: Lyzu
+## Version: @project-version@
+## Author: @project-author@
 ## Notes: What is dead, should stay dead.
 
 StayDead.lua
