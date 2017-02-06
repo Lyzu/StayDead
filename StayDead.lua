@@ -109,6 +109,10 @@ local function handler(msg, editbox)
             elseif (msg == "release") then
                 SendAddonMessage(addon_prefix, "release:all", "RAID");
             end
+            
+        elseif (msg == "release") then
+            RepopMe();
+        
         -- restricted
         else
             print("You need to be leader to use this function.")
