@@ -3,5 +3,6 @@
 ## Version: @project-version@
 ## Author: @project-author@
 ## Notes: What is dead, should stay dead.
+## SavedVariables: StayDeadDB
 
 StayDead.lua

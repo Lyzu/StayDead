@@ -7,26 +7,42 @@ local events = CreateFrame("Frame", "StayDead_events")
 local sync = CreateFrame("Frame", "StayDead_sync")
 
 -- register events
-events:RegisterEvent("PLAYER_LOGIN")
 events:RegisterEvent("GROUP_JOINED")
 events:RegisterEvent("GROUP_LEFT")
 events:RegisterEvent("PLAYER_DEAD")
 sync:RegisterEvent("CHAT_MSG_ADDON")
 
--- disable addon by default
-local status = "off";
+-- initialize mod and disable by default
+if StayDeadDB['mod'] == nil then
+    StayDeadDB['mod'] = "off"
+end
+
+-- functions to check mod
+function setMod (mod)
+    if (mod == "on") or (mod == "off") then
+        StayDeadDB['mod'] = mod
+    end
+end
+
+function isMod (mod)
+    if (mod == StayDeadDB['mod']) then
+        return true;
+    else
+        return false;
+    end
+end
 
 -- hide function
 function StayDead_Status()
-    if (status == "on") then
+    if isMod("on") then
         StaticPopup1Button1:Hide();
     end
-    if  (status == "off") then
+    if isMod("off") then
         StaticPopup1Button1:Show();
     end
 end
 
--- fetch status of leader
+-- fetch mod of leader
 function StayDead_fetch()
     -- raid
     if (IsInRaid(LE_PARTY_CATEGORY_HOME)) then
@@ -53,11 +69,9 @@ events:SetScript("OnEvent", function(self, event, arg1)
         StayDead_Status();
     elseif (event == "GROUP_JOINED") then
         StayDead_fetch()
-    elseif (event == "GROUP_LEFT") and (status == "on") then
+    elseif (event == "GROUP_LEFT") and isMod("on") then
         print("|cFF8753ef" .. addon_prefix .. "|r disabled");
-        status = "off"
-    elseif (event == "PLAYER_LOGIN") then
-        StayDead_fetch()
+        setMod("off")
     end
 end)
 
@@ -66,26 +80,25 @@ sync:SetScript("OnEvent", function(self, event, prefix, message, channel, fullse
     if (event == "CHAT_MSG_ADDON") and (prefix == addon_prefix) then
         local sender = string.match(fullsender, "(%a*)-.*")
         local action, message = string.match(message, "(%a*):(.*)")
-
         -- receiving
         if (action == "sync") then
             if (UnitIsGroupLeader(sender)) then
-                -- updating status
-                if (message == "StayDead_on") and (status == "off") then
+                -- updating mod
+                if (message == "StayDead_on") and isMod("off") then
                     print("|cFF8753ef" .. addon_prefix .. "|r enabled");
-                    status = "on";
-                elseif (message == "StayDead_off") and (status == "on") then
+                    setMod("on");
+                elseif (message == "StayDead_off") and isMod("on") then
                     print("|cFF8753ef" .. addon_prefix .. "|r disabled");
-                    status = "off";
+                    setMod("off");
                 end
             end
         -- fetching
         elseif (action == "fetch") then
             if (sender ~= nil) and (UnitInParty(sender))then
-                SendAddonMessage(addon_prefix, "sync:" .. addon_prefix .. "_" .. status, "WHISPER", sender);
+                SendAddonMessage(addon_prefix, "sync:" .. addon_prefix .. "_" .. StayDeadDB['mod'], "WHISPER", sender);
             end
-        -- todo: remove res
-        elseif (action == "release") or (action == "res") then
+        -- releasing
+        elseif (action == "release") then
             if (UnitIsGroupLeader(sender)) then
                 RepopMe();
             end
@@ -96,9 +109,9 @@ end)
 -- slash handler
 local function handler(msg, editbox)
     if (msg == "status") then
-        if (status == "on") then
+        if isMod("on") then
             print("|cFF8753ef" .. addon_prefix .. "|r is enabled");
-        elseif (status == "off") then
+        elseif isMod("off") then
             print("|cFF8753ef" .. addon_prefix .. "|r is disabled");
         end
     else
@@ -110,6 +123,7 @@ local function handler(msg, editbox)
                 SendAddonMessage(addon_prefix, "release:all", "RAID");
             end
             
+        -- release if not leader
         elseif (msg == "release") then
             RepopMe();
         
