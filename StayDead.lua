@@ -17,60 +17,70 @@ if StayDeadDB['mod'] == nil then
     StayDeadDB['mod'] = "off"
 end
 
--- functions to check mod
+-- functions to check or set mod
 function setMod (mod)
     if (mod == "on") or (mod == "off") then
         StayDeadDB['mod'] = mod
+        isMod()
     end
 end
 
-function isMod (mod)
-    if (mod == StayDeadDB['mod']) then
-        return true;
+function isMod (...)
+    local mod = select(1, ...)
+    local state = StayDeadDB['mod']
+    if mod ~= nil then
+        if (mod == state) then
+            return true;
+        else
+            return false;
+        end
     else
-        return false;
+        if (state == "on") then
+            print("|cFF8753ef" .. addon_prefix .. "|r enabled")
+        elseif (state == "off") then
+            print("|cFF8753ef" .. addon_prefix .. "|r disabled")
+        end
     end
 end
 
 -- hide function
 function StayDead_Status()
-    if isMod("on") then
-        StaticPopup1Button1:Hide();
-    end
-    if isMod("off") then
+    -- always show button if Soulstone or Reincarnation is available
+    if HasSoulstone() then
         StaticPopup1Button1:Show();
+
+    -- hide button if addon is enabled
+    else
+        if isMod("on") then
+            StaticPopup1Button1:Hide();
+        else
+            StaticPopup1Button1:Show();
+        end
     end
 end
 
 -- fetch mod of leader
 function StayDead_fetch()
-    -- raid
-    if (IsInRaid(LE_PARTY_CATEGORY_HOME)) then
-        for i=1,GetNumGroupMembers(),1 do
-            name, rank = GetRaidRosterInfo(i);
-            if (rank == 2) then
-                SendAddonMessage(addon_prefix, "fetch:" .. UnitName("player"), "WHISPER", name);
-            end
+    if IsInRaid(LE_PARTY_CATEGORY_HOME) then
+        local prefix = "raid"
+    elseif IsInGroup(LE_PARTY_CATEGORY_HOME) then
+        local prefix = "party"
+    end
+    
+    for i=1,GetNumGroupMembers(),1 do
+        if (UnitIsGroupLeader(prefix .. i)) and (UnitName(prefix .. i) ~= UnitName("player")) then
+            SendAddonMessage(addon_prefix, "fetch:" .. UnitName("player"), "WHISPER", UnitName(prefix .. i));
         end
-    -- party
-    elseif (IsInGroup(LE_PARTY_CATEGORY_HOME)) then
-        for i=1,GetNumGroupMembers(),1 do
-            if (UnitIsGroupLeader("party" .. i)) then
-                SendAddonMessage(addon_prefix, "fetch:" .. UnitName("player"), "WHISPER", UnitName("party" .. i));
-            end
-        end    
     end
 end
 
 -- event handling
 events:SetScript("OnEvent", function(self, event, arg1)
-    -- fire on death
     if (event == "PLAYER_DEAD") then
         StayDead_Status();
     elseif (event == "GROUP_JOINED") then
         StayDead_fetch()
     elseif (event == "GROUP_LEFT") and isMod("on") then
-        print("|cFF8753ef" .. addon_prefix .. "|r disabled");
         setMod("off")
     end
 end)
@@ -85,10 +95,8 @@ sync:SetScript("OnEvent", function(self, event, prefix, message, channel, fullse
             if (UnitIsGroupLeader(sender)) then
                 -- updating mod
                 if (message == "StayDead_on") and isMod("off") then
-                    print("|cFF8753ef" .. addon_prefix .. "|r enabled");
                     setMod("on");
                 elseif (message == "StayDead_off") and isMod("on") then
-                    print("|cFF8753ef" .. addon_prefix .. "|r disabled");
                     setMod("off");
                 end
             end
@@ -109,11 +117,7 @@ end)
 -- slash handler
 local function handler(msg, editbox)
     if (msg == "status") then
-        if isMod("on") then
-            print("|cFF8753ef" .. addon_prefix .. "|r is enabled");
-        elseif isMod("off") then
-            print("|cFF8753ef" .. addon_prefix .. "|r is disabled");
-        end
+        isMod()
     else
         -- sync to others
         if (UnitIsGroupLeader("player")) then
