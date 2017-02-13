@@ -63,10 +63,11 @@ end
 
 -- fetch mod of leader
 function StayDead_fetch()
+    local prefix = nil
     if IsInRaid(LE_PARTY_CATEGORY_HOME) then
-        local prefix = "raid"
+        prefix = "raid"
     elseif IsInGroup(LE_PARTY_CATEGORY_HOME) then
-        local prefix = "party"
+        prefix = "party"
     end
     
     if prefix ~= nil then
