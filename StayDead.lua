@@ -13,8 +13,10 @@ events:RegisterEvent("PLAYER_DEAD")
 sync:RegisterEvent("CHAT_MSG_ADDON")
 
 -- initialize mod and disable by default
-if StayDeadDB['mod'] == nil then
-    StayDeadDB['mod'] = "off"
+if StayDeadDB == nil then
+    StayDeadDB = { 
+        mod = "off"
+    }
 end
 
 -- functions to check or set mod
