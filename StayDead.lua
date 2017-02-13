@@ -69,9 +69,11 @@ function StayDead_fetch()
         local prefix = "party"
     end
     
-    for i=1,GetNumGroupMembers(),1 do
-        if (UnitIsGroupLeader(prefix .. i)) and (UnitName(prefix .. i) ~= UnitName("player")) then
-            SendAddonMessage(addon_prefix, "fetch:" .. UnitName("player"), "WHISPER", UnitName(prefix .. i));
+    if prefix ~= nil then
+        for i=1,GetNumGroupMembers(),1 do
+            if (UnitIsGroupLeader(prefix .. i)) and (UnitName(prefix .. i) ~= UnitName("player")) then
+                SendAddonMessage(addon_prefix, "fetch:" .. UnitName("player"), "WHISPER", UnitName(prefix .. i));
+            end
         end
     end
 end
