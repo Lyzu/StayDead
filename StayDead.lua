@@ -45,8 +45,8 @@ function isMod (...)
     end
 end
 
--- hide function
-function StayDead_Status()
+-- button function
+function StayDead_button()
     -- always show button if Soulstone or Reincarnation is available
     if HasSoulstone() then
         StaticPopup1Button1:Show();
@@ -79,7 +79,7 @@ end
 -- event handling
 events:SetScript("OnEvent", function(self, event, arg1)
     if (event == "PLAYER_DEAD") then
-        StayDead_Status();
+        StayDead_button();
     elseif (event == "GROUP_JOINED") then
         StayDead_fetch()
     elseif (event == "GROUP_LEFT") and isMod("on") then
