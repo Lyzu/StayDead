@@ -63,18 +63,15 @@ end
 
 -- fetch mod of leader
 function StayDead_fetch()
-    local prefix = nil
     if IsInRaid(LE_PARTY_CATEGORY_HOME) then
         prefix = "raid"
-    elseif IsInGroup(LE_PARTY_CATEGORY_HOME) then
+    else
         prefix = "party"
     end
     
-    if prefix ~= nil then
-        for i=1,GetNumGroupMembers(),1 do
-            if (UnitIsGroupLeader(prefix .. i)) and (UnitName(prefix .. i) ~= UnitName("player")) then
-                SendAddonMessage(addon_prefix, "fetch:" .. UnitName("player"), "WHISPER", UnitName(prefix .. i));
-            end
+    for i=1,GetNumGroupMembers(),1 do
+        if (UnitIsGroupLeader(prefix .. i)) and (UnitName(prefix .. i) ~= UnitName("player")) then
+            SendAddonMessage(addon_prefix, "fetch:" .. UnitName("player"), "WHISPER", UnitName(prefix .. i));
         end
     end
 end
