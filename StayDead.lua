@@ -89,7 +89,7 @@ end)
 
 -- sync handling
 sync:SetScript("OnEvent", function(self, event, prefix, message, channel, fullsender)
-    if (event == "CHAT_MSG_ADDON") and (prefix == addon_prefix) then
+    if (prefix == addon_prefix) then
         local sender = string.match(fullsender, "(%a*)-.*")
         local action, message = string.match(message, "(%a*):(.*)")
         -- receiving
