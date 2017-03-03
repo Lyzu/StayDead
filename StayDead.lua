@@ -15,7 +15,8 @@ sync:RegisterEvent("CHAT_MSG_ADDON")
 -- initialize mod and disable by default
 if StayDeadDB == nil then
     StayDeadDB = { 
-        mod = "off"
+        mod = "off",
+        personal = "off"
     }
 end
 
@@ -27,9 +28,27 @@ function setMod (mod)
     end
 end
 
+function setPersonal (mod)
+    if (mod == "on") or (mod == "off") then
+        if mod ~= StayDeadDB['personal'] then
+            StayDeadDB['personal'] = mod
+            isMod()
+        end
+    end
+end
+
 function isMod (...)
     local mod = select(1, ...)
-    local state = StayDeadDB['mod']
+    local leader = StayDeadDB['mod']
+    local personal = StayDeadDB['personal']
+    local state = nil
+
+    if (leader == "on") then
+        state = leader
+    else
+        state = personal
+    end
+    
     if mod ~= nil then
         if (mod == state) then
             return true;
@@ -121,21 +140,21 @@ local function handler(msg, editbox)
     if (msg == "status") then
         isMod()
     else
-        -- sync to others
+        -- leader
         if (UnitIsGroupLeader("player")) then
             if (msg == "on") or (msg == "off") then
                 SendAddonMessage(addon_prefix, "sync:" .. addon_prefix .. "_" .. msg, "RAID");
             elseif (msg == "release") then
                 SendAddonMessage(addon_prefix, "release:all", "RAID");
             end
-            
-        -- release if not leader
-        elseif (msg == "release") then
-            RepopMe();
-        
-        -- restricted
+
+        -- personal
         else
-            print("You need to be leader to use this function.")
+            if (msg == "on") or (msg == "off") then
+                setPersonal(msg)
+            elseif (msg == "release") then
+                RepopMe();
+            end
         end
     end
 end
