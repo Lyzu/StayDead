@@ -24,6 +24,7 @@ end
 function setMod (mod)
     if (mod == "on") or (mod == "off") then
         StayDeadDB['mod'] = mod
+        StayDeadDB['personal'] = mod
         isMod()
     end
 end
@@ -149,12 +150,16 @@ local function handler(msg, editbox)
             end
 
         -- personal
-        else
+        elseif GetNumGroupMembers() > 0 then
             if (msg == "on") or (msg == "off") then
                 setPersonal(msg)
             elseif (msg == "release") then
                 RepopMe();
             end
+        
+        -- without group
+        else
+            print("|cFF8753ef" .. addon_prefix .. "|r only works in a group.")
         end
     end
 end
