@@ -5,10 +5,13 @@ Tired of members releasing their spirit after they died although you mentioned m
 
 ### Commands
 `/sd on`      *   - will hide the "Release Spirit" button
+
 `/sd off`     *   - will show the "Release Spirit" button for future deaths
 
 `/sd release`   * - will release the group/raid
+
 `/sd releaseme`   - will release your spirit (in case you need to manually do that)
+
 `/sd status`      - print the status of the StayDead functionality
 
 * requires leader or assist
