@@ -7,129 +7,86 @@ local events = CreateFrame("Frame", "StayDead_events")
 local sync = CreateFrame("Frame", "StayDead_sync")
 
 -- register events
+events:RegisterEvent("PLAYER_LOGIN")
 events:RegisterEvent("GROUP_JOINED")
 events:RegisterEvent("GROUP_LEFT")
 events:RegisterEvent("PLAYER_DEAD")
 sync:RegisterEvent("CHAT_MSG_ADDON")
 
--- initialize mod and disable by default
-if StayDeadDB == nil then
-    StayDeadDB = { 
-        mod = "off",
-        personal = "off"
-    }
-end
+-- disable addon by default
+local status = "off";
 
--- functions to check or set mod
-function setMod (mod)
-    if (mod == "on") or (mod == "off") then
-        StayDeadDB['mod'] = mod
-        StayDeadDB['personal'] = mod
-        isMod()
+-- hide function
+function StayDead_Status()
+    if (status == "on") then
+        StaticPopup1Button1:Hide();
     end
-end
-
-function setPersonal (mod)
-    if (mod == "on") or (mod == "off") then
-        if mod ~= StayDeadDB['personal'] then
-            StayDeadDB['personal'] = mod
-            isMod()
-        end
-    end
-end
-
-function isMod (...)
-    local mod = select(1, ...)
-    local leader = StayDeadDB['mod']
-    local personal = StayDeadDB['personal']
-    local state = nil
-
-    if (leader == "on") then
-        state = leader
-    else
-        state = personal
-    end
-    
-    if mod ~= nil then
-        if (mod == state) then
-            return true;
-        else
-            return false;
-        end
-    else
-        if (state == "on") then
-            print("|cFF8753ef" .. addon_prefix .. "|r enabled")
-        elseif (state == "off") then
-            print("|cFF8753ef" .. addon_prefix .. "|r disabled")
-        end
-    end
-end
-
--- button function
-function StayDead_button()
-    -- always show button if Soulstone or Reincarnation is available
-    if HasSoulstone() then
+    if  (status == "off") then
         StaticPopup1Button1:Show();
-
-    -- hide button if addon is enabled
-    else
-        if isMod("on") then
-            StaticPopup1Button1:Hide();
-        else
-            StaticPopup1Button1:Show();
-        end
     end
 end
 
--- fetch mod of leader
+-- fetch status of leader
 function StayDead_fetch()
-    if IsInRaid(LE_PARTY_CATEGORY_HOME) then
-        prefix = "raid"
-    else
-        prefix = "party"
-    end
-    
-    for i=1,GetNumGroupMembers(),1 do
-        if (UnitIsGroupLeader(prefix .. i)) and (UnitName(prefix .. i) ~= UnitName("player")) then
-            SendAddonMessage(addon_prefix, "fetch:" .. UnitName("player"), "WHISPER", UnitName(prefix .. i));
+    -- raid
+    if (IsInRaid(LE_PARTY_CATEGORY_HOME)) then
+        for i=1,GetNumGroupMembers(),1 do
+            name, rank = GetRaidRosterInfo(i);
+            if (rank == 2) then
+                SendAddonMessage(addon_prefix, "fetch:" .. UnitName("player"), "WHISPER", name);
+            end
         end
+    -- party
+    elseif (IsInGroup(LE_PARTY_CATEGORY_HOME)) then
+        for i=1,GetNumGroupMembers(),1 do
+            if (UnitIsGroupLeader("party" .. i)) then
+                SendAddonMessage(addon_prefix, "fetch:" .. UnitName("player"), "WHISPER", UnitName("party" .. i));
+            end
+        end    
     end
 end
 
 -- event handling
 events:SetScript("OnEvent", function(self, event, arg1)
+    -- fire on death
     if (event == "PLAYER_DEAD") then
-        StayDead_button();
+        StayDead_Status();
     elseif (event == "GROUP_JOINED") then
         StayDead_fetch()
-    elseif (event == "GROUP_LEFT") and isMod("on") then
-        setMod("off")
+    elseif (event == "GROUP_LEFT") and (status == "on") then
+        print("|cFF8753ef" .. addon_prefix .. "|r disabled");
+        status = "off"
+    elseif (event == "PLAYER_LOGIN") then
+        StayDead_fetch()
     end
 end)
 
 -- sync handling
 sync:SetScript("OnEvent", function(self, event, prefix, message, channel, fullsender)
-    if (prefix == addon_prefix) then
-        local sender = string.match(fullsender, "(.*)-.*")
+    if (event == "CHAT_MSG_ADDON") and (prefix == addon_prefix) then
+        local sender = string.match(fullsender, "(%a*)-.*")
         local action, message = string.match(message, "(%a*):(.*)")
+
         -- receiving
         if (action == "sync") then
-            if (UnitIsGroupLeader(sender)) then
-                -- updating mod
-                if (message == "StayDead_on") and isMod("off") then
-                    setMod("on");
-                elseif (message == "StayDead_off") and isMod("on") then
-                    setMod("off");
+            if (UnitIsGroupLeader(sender) or UnitIsRaidOfficer(sender)) then
+                -- updating status
+                if (message == "StayDead_on") and (status == "off") then
+                    print("|cFF8753ef" .. addon_prefix .. "|r enabled");
+                    status = "on";
+                elseif (message == "StayDead_off") and (status == "on") then
+                    print("|cFF8753ef" .. addon_prefix .. "|r disabled");
+                    status = "off";
                 end
             end
         -- fetching
         elseif (action == "fetch") then
             if (sender ~= nil) and (UnitInParty(sender))then
-                SendAddonMessage(addon_prefix, "sync:" .. addon_prefix .. "_" .. StayDeadDB['mod'], "WHISPER", sender);
+                SendAddonMessage(addon_prefix, "sync:" .. addon_prefix .. "_" .. status, "WHISPER", sender);
             end
-        -- releasing
-        elseif (action == "release") then
-            if (UnitIsGroupLeader(sender)) then
+        -- todo: remove res
+        elseif (action == "release") or (action == "res") then
+            if (UnitIsGroupLeader(sender) or UnitIsRaidOfficer(sender)) then
                 RepopMe();
             end
         end
@@ -139,27 +96,25 @@ end)
 -- slash handler
 local function handler(msg, editbox)
     if (msg == "status") then
-        isMod()
+        if (status == "on") then
+            print("|cFF8753ef" .. addon_prefix .. "|r is enabled");
+        elseif (status == "off") then
+            print("|cFF8753ef" .. addon_prefix .. "|r is disabled");
+        end
+	elseif (msg == "releaseme") then
+        RepopMe();
     else
-        -- leader
-        if (UnitIsGroupLeader("player")) then
+        -- sync to others
+        if (UnitIsGroupLeader("player") or UnitIsRaidOfficer("player")) then
             if (msg == "on") or (msg == "off") then
                 SendAddonMessage(addon_prefix, "sync:" .. addon_prefix .. "_" .. msg, "RAID");
             elseif (msg == "release") then
                 SendAddonMessage(addon_prefix, "release:all", "RAID");
             end
-
-        -- personal
-        elseif GetNumGroupMembers() > 0 then
-            if (msg == "on") or (msg == "off") then
-                setPersonal(msg)
-            elseif (msg == "release") then
-                RepopMe();
-            end
         
-        -- without group
+        -- restricted
         else
-            print("|cFF8753ef" .. addon_prefix .. "|r only works in a group.")
+            print("You need to be leader or raid assistant to use this function.")
         end
     end
 end
